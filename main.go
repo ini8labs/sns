@@ -1,67 +1,53 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	//"encoding/json"
+	//"fmt"
 	"os"
+	"os/signal"
+	"sns/src/apis"
+	"syscall"
 
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 	"github.com/twilio/twilio-go"
-	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
+	//verify "github.com/twilio/twilio-go/rest/verify/v2"
 )
 
+// @title My API
+// @version 1.0
+// @description This is Lottery SMS Notification Service API
+// @host localhost:3000
+// @BasePath /api/v1
+// @schemes http
 func main() {
 	if err := godotenv.Load(); err != nil {
-		panic(err)
+		panic(err.Error())
 	}
+
+	logger := logrus.New()
+	logger.SetLevel(logrus.InfoLevel)
 
 	accountSid := os.Getenv("A_SID")
 	authToken := os.Getenv("AUTH_TOKEN")
-	from := os.Getenv("TWILIO_NUMBER")
-	to := "+916379430684"
 
-	message := "Hello, from Mohit today! Twilio is running successfully"
-
-	client := twilio.NewRestClientWithParams(twilio.ClientParams{
+	twilioClient := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: accountSid,
 		Password: authToken,
 	})
 
-	//Validation(to, "Aayush", client)
-	SMS(from, to, message, client)
-
-}
-
-func SMS(from, to, message string, client *twilio.RestClient) {
-	params := &twilioApi.CreateMessageParams{}
-	params.SetTo(to)
-	params.SetFrom(from)
-	params.SetBody(message)
-
-	resp, err := client.Api.CreateMessage(params)
-	if err != nil {
-		fmt.Println("Error sending SMS message: " + err.Error())
-	} else {
-		response, _ := json.Marshal(*resp)
-		fmt.Println("Response: " + string(response))
+	server := apis.Server{
+		Logger: logger,
+		Client: twilioClient,
 	}
 
-}
-
-func Validation(phone, name string, client *twilio.RestClient) {
-	params := &twilioApi.CreateValidationRequestParams{}
-	params.SetFriendlyName(name)
-	params.SetPhoneNumber(phone)
-
-	resp, err := client.Api.CreateValidationRequest(params)
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		if resp.FriendlyName != nil {
-			fmt.Println(*resp.FriendlyName)
-		} else {
-			fmt.Println(resp.FriendlyName)
+	go func() {
+		if err := apis.NewServer(server); err != nil {
+			panic(err)
 		}
-	}
-
+	}()
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, syscall.SIGTERM, syscall.SIGINT)
+	<-interrupt
+	logger.Info("Closing the Server")
 }
