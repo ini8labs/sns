@@ -12,8 +12,10 @@ import (
 )
 
 var (
+	errBadRequest      error = errors.New("bad request")
 	errInvalidPhoneNum error = errors.New("invalid phone number")
 	errInvalidOTP      error = errors.New("invalid OTP")
+	errIncorrectOTP    error = errors.New("incorrect OTP")
 )
 
 type Server struct {
@@ -26,9 +28,7 @@ func NewServer(server Server) error {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 
 	r.POST("/api/v1/Login/OTP", server.sendOTP)
-	r.GET("/enter-otp", server.enterOTP)
 	r.POST("/api/v1/Login/verify", server.OTPVerification)
-	r.GET("api/v1/push", server.pushNotification)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return r.Run(":8080")

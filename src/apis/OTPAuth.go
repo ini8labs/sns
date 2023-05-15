@@ -4,9 +4,6 @@ import (
 	"net/http"
 	"os"
 
-	//"github.com/sirupsen/logrus"
-	//twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
-
 	"github.com/gin-gonic/gin"
 	verify "github.com/twilio/twilio-go/rest/verify/v2"
 )
@@ -54,7 +51,7 @@ func (s Server) sendOTP(c *gin.Context) {
 			c.JSON(http.StatusAccepted, "OTP sent successfully")
 		} else {
 			s.Logger.Infoln(resp.Status)
-			c.JSON(http.StatusForbidden, "some 403")
+			c.JSON(http.StatusForbidden, "Forbidden authorization")
 		}
 	}
 }
@@ -62,8 +59,8 @@ func (s Server) sendOTP(c *gin.Context) {
 func (s Server) OTPVerification(c *gin.Context) {
 	var verification Verification
 	if err := c.ShouldBind(&verification); err != nil {
-		s.Logger.Error(errInvalidOTP)
-		c.JSON(http.StatusBadRequest, errInvalidOTP.Error())
+		s.Logger.Error(err)
+		c.JSON(http.StatusBadRequest, errBadRequest.Error())
 		return
 	}
 
@@ -80,19 +77,19 @@ func (s Server) OTPVerification(c *gin.Context) {
 	resp, err := s.Client.VerifyV2.CreateVerificationCheck("VAbf0905e98d803fef6df430b2197710ee", params)
 	if err != nil {
 		s.Logger.Error(err)
-		c.JSON(http.StatusBadRequest, errInvalidOTP.Error())
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	} else {
 		if *resp.Status != "approved" {
 			s.Logger.Info(*resp.Status)
-			c.JSON(http.StatusUnauthorized, "incorrect OTP")
+			c.JSON(http.StatusUnauthorized, *resp.Status)
 			return
 		}
 	}
-	c.JSON(http.StatusOK, "logged in")
+	c.JSON(http.StatusOK, "logged in successfully")
 }
 
-func (s Server) enterOTP(c *gin.Context) {
-	phoneNumber := c.Query("phone_number")
-	c.HTML(http.StatusOK, "enter_otp.html", gin.H{"phone_number": phoneNumber})
-}
+// func (s Server) enterOTP(c *gin.Context) {
+// 	phoneNumber := c.Query("phone_number")
+// 	c.HTML(http.StatusOK, "enter_otp.html", gin.H{"phone_number": phoneNumber})
+// }
