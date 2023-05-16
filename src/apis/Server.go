@@ -2,7 +2,8 @@ package apis
 
 import (
 	"errors"
-	"sns/docs"
+
+	docs "github.com/ini8labs/sns/docs"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

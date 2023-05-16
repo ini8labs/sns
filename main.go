@@ -5,8 +5,9 @@ import (
 	//"fmt"
 	"os"
 	"os/signal"
-	"sns/src/apis"
 	"syscall"
+
+	"github.com/ini8labs/sns/src/apis"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
