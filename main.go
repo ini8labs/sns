@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/twilio/twilio-go"
 
-	"github.com/ini8labs/snsV2/src/apis"
+	"github.com/ini8labs/sns/src/apis"
 )
 
 // @title My API

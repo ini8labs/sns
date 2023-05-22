@@ -1,4 +1,4 @@
-module github.com/ini8labs/snsV2
+module github.com/ini8labs/sns
 
 go 1.20
 

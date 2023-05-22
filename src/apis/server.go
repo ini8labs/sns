@@ -9,7 +9,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/twilio/twilio-go"
 
-	docs "github.com/ini8labs/snsV2/docs"
+	docs "github.com/ini8labs/sns/docs"
 )
 
 var (
