@@ -2,11 +2,12 @@ package apis
 
 import (
 	"net/http"
-	"os"
+	//"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	verify "github.com/twilio/twilio-go/rest/verify/v2"
+	// "github.com/ini8labs/sns"
 )
 
 type PhoneNumber struct {
@@ -32,10 +33,8 @@ func (s Server) SendOTP(c *gin.Context) {
 		return
 	}
 
-	params := &verify.CreateVerificationParams{}
-	params = fillCreateVerificationParams(params, phoneNum.PhoneNumber)
-
-	resp, err := s.Client.VerifyV2.CreateVerification(os.Getenv("VERIDY_S_ID"), params)
+	params := fillCreateVerificationParams(phoneNum.PhoneNumber)
+	resp, err := s.Client.VerifyV2.CreateVerification(serviceID, params)
 	if err != nil {
 		s.Logger.Error(err)
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -73,10 +72,8 @@ func (s Server) OTPVerification(c *gin.Context) {
 		return
 	}
 
-	params := &verify.CreateVerificationCheckParams{}
-	params = fillCreateVerificationCheckParams(params, phone, otp)
-
-	resp, err := s.Client.VerifyV2.CreateVerificationCheck(os.Getenv("VERIDY_S_ID"), params)
+	params := fillCreateVerificationCheckParams(phone, otp)
+	resp, err := s.Client.VerifyV2.CreateVerificationCheck(serviceID, params)
 	if err != nil {
 		s.Logger.Error(err)
 		c.JSON(http.StatusBadRequest, err.Error())
@@ -101,14 +98,16 @@ func returnPhoneFromCookie(c *gin.Context) (string, error) {
 	return phone, nil
 }
 
-func fillCreateVerificationParams(params *verify.CreateVerificationParams, phone string) *verify.CreateVerificationParams {
+func fillCreateVerificationParams(phone string) *verify.CreateVerificationParams {
+	params := &verify.CreateVerificationParams{}
 	params.SetTo(phone)
 	params.SetChannel("sms")
 
 	return params
 }
 
-func fillCreateVerificationCheckParams(params *verify.CreateVerificationCheckParams, phone string, otp OTP) *verify.CreateVerificationCheckParams {
+func fillCreateVerificationCheckParams(phone string, otp OTP) *verify.CreateVerificationCheckParams {
+	params := &verify.CreateVerificationCheckParams{}
 	params.SetTo(phone)
 	params.SetCode(otp.OTP)
 

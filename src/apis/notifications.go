@@ -2,7 +2,6 @@ package apis
 
 import (
 	"encoding/json"
-	"os"
 
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
@@ -13,9 +12,7 @@ func (s Server) SMS(to, message string) (string, error) {
 		return "", err
 	}
 
-	params := &twilioApi.CreateMessageParams{}
-	params = fillCreateMessageParams(params, to, message)
-
+	params := fillCreateMessageParams(to, message)
 	resp, err := s.Client.Api.CreateMessage(params)
 	if err != nil {
 		s.Logger.Errorln("Error sending SMS message: " + err.Error())
@@ -27,9 +24,10 @@ func (s Server) SMS(to, message string) (string, error) {
 	return string(response), nil
 }
 
-func fillCreateMessageParams(params *twilioApi.CreateMessageParams, to, message string) *twilioApi.CreateMessageParams {
+func fillCreateMessageParams(to, message string) *twilioApi.CreateMessageParams {
+	params := &twilioApi.CreateMessageParams{}
 	params.SetTo(to)
-	params.SetFrom(os.Getenv("TWILIO_NUMBER"))
+	params.SetFrom(twilioNumber)
 	params.SetBody(message)
 
 	return params

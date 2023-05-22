@@ -12,6 +12,16 @@ import (
 	"github.com/ini8labs/sns/src/apis"
 )
 
+const (
+	accountSidEnv = "A_SID"
+	authTokenEnv  = "AUTH_TOKEN"
+)
+
+var (
+	accountSid string
+	authToken  string
+)
+
 // @title My API
 // @version 1.0
 // @description This is Lottery SMS Notification Service API
@@ -26,8 +36,8 @@ func main() {
 	logger := logrus.New()
 	logger.SetLevel(logrus.InfoLevel)
 
-	accountSid := os.Getenv("A_SID")
-	authToken := os.Getenv("AUTH_TOKEN")
+	accountSid = os.Getenv(accountSidEnv)
+	authToken = os.Getenv(authTokenEnv)
 
 	twilioClient := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: accountSid,
