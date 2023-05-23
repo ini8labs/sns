@@ -55,6 +55,7 @@ func NewServer(server Server) error {
 
 	r.POST("/api/v1/login/otp", server.SendOTP)
 	r.POST("/api/v1/login/verify", server.OTPVerification)
+	r.POST("api/v1/notify", server.SMSCheck)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return r.Run(":8080")
