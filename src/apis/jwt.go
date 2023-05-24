@@ -45,7 +45,7 @@ func (s Server) SetToken(c *gin.Context, username, phone string) error {
 
 func (s Server) authMiddleware(c *gin.Context) {
 	// Retrieve the token from the cookie
-	tokenString, err := c.Cookie(sessionToken)
+	tokenString, err := c.Cookie(jwtToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "Unauthorized")
 		c.Abort()
