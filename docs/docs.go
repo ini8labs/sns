@@ -18,7 +18,7 @@ const docTemplate = `{
     "paths": {
         "/login/otp": {
             "post": {
-                "tags": ["OTP APIs"],
+                "tags": ["SNS APIs"],
                 "parameters": [
                     {
                         "description": "enter a valid Phone Number",
@@ -49,7 +49,7 @@ const docTemplate = `{
         },
         "/login/verify": {
             "post": {
-                "tags": ["OTP APIs"],
+                "tags": ["SNS APIs"],
                 "parameters": [
                     {
                         "description": "enter a valid OTP",
@@ -62,6 +62,37 @@ const docTemplate = `{
                                 "otp":{
                                     "type": "string",
                                     "example": "123465"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status ok",
+                        "schema": {
+                            "type": "string",
+                            "example": "message sent successfully"
+                        }
+                    }
+                }
+            }
+        },
+        "/notify": {
+            "post": {
+                "tags": ["SNS APIs"],
+                "parameters": [
+                    {
+                        "description": "enter a message",
+                        "name": "msg",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "msg":{
+                                    "type": "string",
+                                    "example": "bet placed successfully"
                                 }
                             }
                         }
@@ -87,8 +118,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"http"},
-	Title:            "Customer-manager APIs",
-	Description:      "This is Lottery SMS Notification Service API",
+	Title:            "SMS Notification Service",
+	Description:      "This is Lottery SMS Notification and OTP Authentication Service API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

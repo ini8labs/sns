@@ -2,12 +2,10 @@ package apis
 
 import (
 	"net/http"
-	//"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	verify "github.com/twilio/twilio-go/rest/verify/v2"
-	// "github.com/ini8labs/sns"
 )
 
 type PhoneNumber struct {
@@ -55,19 +53,22 @@ func (s Server) SendOTP(c *gin.Context) {
 func (s Server) OTPVerification(c *gin.Context) {
 	var otp OTP
 	if err := c.ShouldBind(&otp); err != nil {
+		c.JSON(http.StatusBadRequest, errBadRequest)
 		s.Logger.Error(err)
-		c.JSON(http.StatusBadRequest, errBadRequest.Error())
+
 		return
 	}
 
 	if err := validateOTP(otp.OTP); err != nil {
+		c.JSON(http.StatusBadRequest, errBadRequest)
 		s.Logger.Error(err)
-		c.JSON(http.StatusBadRequest, err.Error())
+
 		return
 	}
 
 	phone, err := returnPhoneFromCookie(c)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, errBadRequest)
 		s.Logger.Error(err)
 		return
 	}
@@ -75,14 +76,16 @@ func (s Server) OTPVerification(c *gin.Context) {
 	params := fillCreateVerificationCheckParams(phone, otp)
 	resp, err := s.Client.VerifyV2.CreateVerificationCheck(serviceID, params)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, errBadRequest)
 		s.Logger.Error(err)
-		c.JSON(http.StatusBadRequest, err.Error())
+
 		return
 	}
 
 	if *resp.Status != "approved" {
-		s.Logger.Info(*resp.Status)
 		c.JSON(http.StatusBadRequest, *resp.Status)
+		s.Logger.Info(*resp.Status)
+
 		return
 	}
 
