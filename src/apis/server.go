@@ -23,6 +23,7 @@ var (
 	errInvalidOTP      error = errors.New("invalid OTP")
 	errIncorrectOTP    error = errors.New("incorrect OTP")
 	errInternalServer  error = errors.New("Somethng wrong with the server")
+	errInvalidToken    error = errors.New("invalid token")
 )
 
 const (
