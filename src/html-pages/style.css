@@ -11,17 +11,4 @@ body{
     background: linear-gradient(#54a6e1, #e64988);
 }
 
-#phone_number{
-    background-color: lightgrey;
-}
 
-#submit_button{
-    padding: 10px;
-    margin-top: 20px;
-}
-
-form {
-    width: 200px;
-    height: 200px;
-    background: white;
-}

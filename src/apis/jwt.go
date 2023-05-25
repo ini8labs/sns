@@ -43,12 +43,13 @@ func (s Server) SetToken(c *gin.Context, username, phone string) error {
 	return nil
 }
 
-func (s Server) authMiddleware(c *gin.Context) {
+func (s Server) jwtTokenAuth(c *gin.Context) {
 	// Retrieve the token from the cookie
 	tokenString, err := c.Cookie(jwtToken)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, "Unauthorized")
-		c.Abort()
+		s.Logger.Error(err)
+		c.JSON(http.StatusUnauthorized, errUnauthorized.Error())
+
 		return
 	}
 
@@ -71,15 +72,11 @@ func (s Server) authMiddleware(c *gin.Context) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		// Extract session information from the claims
-		username := claims["username"].(string)
-
-		// Set the session information in the Gin context
-		c.Set("username", username)
-		c.Next()
-	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		c.Abort()
+		userID := claims["userID"].(string)
 	}
+
+	c.JSON(http.StatusUnauthorized, errUnauthorized.Error())
+	c.Abort()
 }
 
 func (s Server) unsetCookie(c *gin.Context, cookieName string) error {
