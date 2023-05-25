@@ -2,23 +2,31 @@ package apis
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
+type PayLoad struct {
+	userName string
+	userID   string
+	phone    string
+}
+
 var (
-	signingKey = []byte("your-secret-key") //TODO: Change this to your own secret key or API key
+	signingKey = []byte(os.Getenv("A_SID"))
 	jwtToken   = "jwt_token"
 )
 
-func (s Server) SetToken(c *gin.Context, username, phone string) error {
+func (s Server) JwtSetToken(c *gin.Context, userID, username, phone string) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userID": username,                         //TODO: get username from lsdb.getUserInfoByGovid
-		"phone":  phone,                            //TODO:  get phone form lsdb.getUserInfoByGovid
-		"exp":    time.Now().Add(time.Hour).Unix(), //TODO: check if it works with UTC time
+		"userID":   userID,
+		"userName": username,                         //TODO: get username from lsdb.getUserInfoByGovid
+		"phone":    phone,                            //TODO:  get phone form lsdb.getUserInfoByGovid
+		"exp":      time.Now().Add(time.Hour).Unix(), //TODO: check if it works with UTC time
 	})
 
 	// delete "PhoneNumber" cookie
@@ -43,23 +51,22 @@ func (s Server) SetToken(c *gin.Context, username, phone string) error {
 	return nil
 }
 
-func (s Server) jwtTokenAuth(c *gin.Context) {
+func (s Server) JwtTokenAuth(c *gin.Context) (PayLoad, error) {
 	// Retrieve the token from the cookie
 	tokenString, err := c.Cookie(jwtToken)
 	if err != nil {
 		s.Logger.Error(err)
 		c.JSON(http.StatusUnauthorized, errUnauthorized.Error())
 
-		return
+		return PayLoad{}, nil
 	}
 
 	// Parse and validate the token
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Validate the signing algorithm
+
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
-
 		return signingKey, nil
 	})
 
@@ -67,16 +74,30 @@ func (s Server) jwtTokenAuth(c *gin.Context) {
 		s.Logger.Error(errInvalidToken)
 		c.JSON(http.StatusUnauthorized, errInvalidToken.Error())
 		c.Abort()
-		return
+		return PayLoad{}, err
 	}
 
+	payLoad, err := jwtPayload(token)
+	if err != nil {
+		s.Logger.Error(err)
+		c.JSON(http.StatusUnauthorized, errUnauthorized.Error())
+		return PayLoad{}, err
+	}
+
+	//c.JSON(http.StatusOK, payLoad)
+	return payLoad, nil
+}
+
+func jwtPayload(token *jwt.Token) (PayLoad, error) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// Extract session information from the claims
-		userID := claims["userID"].(string)
-	}
+		var payLoad PayLoad
+		payLoad.userName = claims["userName"].(string)
+		payLoad.userID = claims["userID"].(string)
+		payLoad.phone = claims["phone"].(string)
 
-	c.JSON(http.StatusUnauthorized, errUnauthorized.Error())
-	c.Abort()
+		return payLoad, nil
+	}
+	return PayLoad{}, errPayload
 }
 
 func (s Server) unsetCookie(c *gin.Context, cookieName string) error {

@@ -25,6 +25,7 @@ var (
 	errInternalServer  error = errors.New("Somethng wrong with the server")
 	errInvalidToken    error = errors.New("invalid token")
 	errUnauthorized    error = errors.New("unauthorized")
+	errPayload         error = errors.New("payload not found")
 )
 
 const (
