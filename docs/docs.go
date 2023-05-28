@@ -53,12 +53,16 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "enter a valid OTP",
-                        "name": "otp",
+                        "name": "otpAuth",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "type": "object",
                             "properties": {
+                                "phone_number":{
+                                    "type": "string",
+                                    "example": "+916379430684"
+                                },
                                 "otp":{
                                     "type": "string",
                                     "example": "123465"

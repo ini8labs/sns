@@ -13,6 +13,7 @@ import (
 	"github.com/twilio/twilio-go"
 
 	docs "github.com/ini8labs/sns/docs"
+	mw "github.com/ini8labs/sns/src/middleware"
 )
 
 var (
@@ -58,7 +59,8 @@ func NewServer(server Server) error {
 
 	r.POST("/api/v1/login/otp", server.SendOTP)
 	r.POST("/api/v1/login/verify", server.OTPVerification)
-	r.POST("api/v1/notify", server.SMSCheck)
+	r.POST("api/v1/notify", mw.AuthMiddleware([]byte(os.Getenv("A_SID"))), server.SMSCheck)
+	r.POST("api/v1/token/refresh", mw.AuthMiddleware([]byte(os.Getenv("A_SID"))), mw.JwtrefreshToken)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return r.Run(":8080")

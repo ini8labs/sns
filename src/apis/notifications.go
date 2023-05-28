@@ -33,7 +33,7 @@ func (s Server) SMS(to, message string) (string, error) {
 }
 
 func (s Server) SMSCheck(c *gin.Context) {
-	to, err := returnPhoneFromCookie(c)
+	to, err := c.Cookie("Phone")
 	if err != nil {
 		s.Logger.Error(err)
 		c.JSON(http.StatusBadRequest, err)
