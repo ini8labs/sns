@@ -38,7 +38,6 @@ func AuthMiddleware(signingKey []byte) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-
 		c.Next()
 	}
 }
