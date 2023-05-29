@@ -8,11 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+
+	//swaggerFiles "github.com/swaggo/files"
+	//ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/twilio/twilio-go"
 
-	docs "github.com/ini8labs/sns/docs"
+	mw "github.com/ini8labs/sns/src/middleware"
 )
 
 var (
@@ -23,6 +24,9 @@ var (
 	errInvalidOTP      error = errors.New("invalid OTP")
 	errIncorrectOTP    error = errors.New("incorrect OTP")
 	errInternalServer  error = errors.New("Somethng wrong with the server")
+	errInvalidToken    error = errors.New("invalid token")
+	errUnauthorized    error = errors.New("unauthorized")
+	errPayload         error = errors.New("payload not found")
 )
 
 const (
@@ -32,6 +36,7 @@ const (
 
 func init() {
 	if err := godotenv.Load(); err != nil {
+		log.Fatal("couldn't load env")
 		panic(err.Error())
 	}
 
@@ -51,12 +56,13 @@ type Server struct {
 
 func NewServer(server Server) error {
 	r := gin.Default()
-	docs.SwaggerInfo.BasePath = "/api/v1"
+	//docs.SwaggerInfo.BasePath = "/api/v1"
 
 	r.POST("/api/v1/login/otp", server.SendOTP)
 	r.POST("/api/v1/login/verify", server.OTPVerification)
-	r.POST("api/v1/notify", server.SMSCheck)
+	r.POST("api/v1/notify", mw.AuthMiddleware([]byte(os.Getenv("A_SID"))), server.SMSCheck)
+	r.POST("api/v1/token/refresh", mw.AuthMiddleware([]byte(os.Getenv("A_SID"))), mw.JwtrefreshToken)
 
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return r.Run(":8080")
 }

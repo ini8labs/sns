@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	mw "github.com/ini8labs/sns/src/middleware"
 	verify "github.com/twilio/twilio-go/rest/verify/v2"
 )
 
@@ -13,7 +13,8 @@ type PhoneNumber struct {
 }
 
 type OTP struct {
-	OTP string `json:"otp"`
+	PhoneNumber string `json:"phone_number"`
+	OTP         string `json:"otp"`
 }
 
 func (s Server) SendOTP(c *gin.Context) {
@@ -31,7 +32,7 @@ func (s Server) SendOTP(c *gin.Context) {
 		return
 	}
 
-	params := fillCreateVerificationParams(phoneNum.PhoneNumber)
+	params := fillCreateVerificationParams(phoneNum)
 	resp, err := s.Client.VerifyV2.CreateVerification(serviceID, params)
 	if err != nil {
 		s.Logger.Error(err)
@@ -41,7 +42,6 @@ func (s Server) SendOTP(c *gin.Context) {
 
 	if resp.Status != nil {
 		s.Logger.Infoln(*resp.Status)
-		c.SetCookie("PhoneNumber", phoneNum.PhoneNumber, 1200, "/", "localhost", false, true)
 		c.JSON(http.StatusOK, "OTP sent successfully")
 		return
 	}
@@ -66,14 +66,7 @@ func (s Server) OTPVerification(c *gin.Context) {
 		return
 	}
 
-	phone, err := returnPhoneFromCookie(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, errBadRequest)
-		s.Logger.Error(err)
-		return
-	}
-
-	params := fillCreateVerificationCheckParams(phone, otp)
+	params := fillCreateVerificationCheckParams(otp)
 	resp, err := s.Client.VerifyV2.CreateVerificationCheck(serviceID, params)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, errBadRequest)
@@ -89,30 +82,28 @@ func (s Server) OTPVerification(c *gin.Context) {
 		return
 	}
 
+	if _, err := mw.JwtCreateToken(c, otp.PhoneNumber); err != nil {
+		s.Logger.Error(err)
+		c.JSON(http.StatusInternalServerError, errInternalServer.Error())
+
+		return
+	}
+
 	c.JSON(http.StatusOK, "logged in successfully")
 }
 
-func returnPhoneFromCookie(c *gin.Context) (string, error) {
-	phone, err := c.Cookie("PhoneNumber")
-	if err != nil {
-		logrus.Error(err)
-		return "", err
-	}
-	return phone, nil
-}
-
-func fillCreateVerificationParams(phone string) *verify.CreateVerificationParams {
+func fillCreateVerificationParams(phone PhoneNumber) *verify.CreateVerificationParams {
 	params := &verify.CreateVerificationParams{}
-	params.SetTo(phone)
+	params.SetTo(phone.PhoneNumber)
 	params.SetChannel("sms")
 
 	return params
 }
 
-func fillCreateVerificationCheckParams(phone string, otp OTP) *verify.CreateVerificationCheckParams {
+func fillCreateVerificationCheckParams(OTPAuth OTP) *verify.CreateVerificationCheckParams {
 	params := &verify.CreateVerificationCheckParams{}
-	params.SetTo(phone)
-	params.SetCode(otp.OTP)
+	params.SetTo(OTPAuth.PhoneNumber)
+	params.SetCode(OTPAuth.OTP)
 
 	return params
 }
