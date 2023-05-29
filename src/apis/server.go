@@ -36,6 +36,7 @@ const (
 
 func init() {
 	if err := godotenv.Load(); err != nil {
+		log.Fatal("couldn't load env")
 		panic(err.Error())
 	}
 
